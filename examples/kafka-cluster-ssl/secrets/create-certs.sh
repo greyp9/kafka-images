@@ -16,13 +16,13 @@ openssl x509 -req -CA snakeoil-ca-1.crt -CAkey snakeoil-ca-1.key -in kafkacat.cl
 
 
 
-for i in broker1 broker2 broker3 producer consumer
+for i in kafka-ssl-1 kafka-ssl-2 kafka-ssl-3 producer consumer
 do
 	echo $i
 	# Create keystores
 	keytool -genkey -noprompt \
 				 -alias $i \
-				 -dname "CN=$i.test.confluent.io, OU=TEST, O=CONFLUENT, L=PaloAlto, S=Ca, C=US" \
+				 -dname "CN=$i, OU=TEST, O=CONFLUENT, L=PaloAlto, S=Ca, C=US" \
 				 -keystore kafka.$i.keystore.jks \
 				 -keyalg RSA \
 				 -storepass confluent \
