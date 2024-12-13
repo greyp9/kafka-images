@@ -1,5 +1,4 @@
 ---
-version: '2'
 services:
   zookeeper-sasl-1:
     image: confluentinc/cp-zookeeper:latest
@@ -11,11 +10,13 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_INIT_LIMIT: 5
       ZOOKEEPER_SYNC_LIMIT: 2
-      ZOOKEEPER_SERVERS: quickstart.confluent.io:22888:23888;quickstart.confluent.io:32888:33888;quickstart.confluent.io:42888:43888
+      ZOOKEEPER_SERVERS: kafka-sasl:22888:23888;kafka-sasl:32888:33888;kafka-sasl:42888:43888
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zookeeper_1_jaas.conf
         -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
         -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
         -Dsun.security.krb5.debug=true
+    # ports:
+    #   - '22181:22181'
     volumes:
     - ${KAFKA_SASL_SECRETS_DIR}:/etc/kafka/secrets
     network_mode: host
@@ -32,11 +33,13 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_INIT_LIMIT: 5
       ZOOKEEPER_SYNC_LIMIT: 2
-      ZOOKEEPER_SERVERS: quickstart.confluent.io:22888:23888;quickstart.confluent.io:32888:33888;quickstart.confluent.io:42888:43888
+      ZOOKEEPER_SERVERS: kafka-sasl:22888:23888;kafka-sasl:32888:33888;kafka-sasl:42888:43888
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zookeeper_2_jaas.conf
         -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
         -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
         -Dsun.security.krb5.debug=true
+    # ports:
+    #   - '32181:32181'
     volumes:
     - ${KAFKA_SASL_SECRETS_DIR}:/etc/kafka/secrets
     network_mode: host
@@ -54,11 +57,13 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_INIT_LIMIT: 5
       ZOOKEEPER_SYNC_LIMIT: 2
-      ZOOKEEPER_SERVERS: quickstart.confluent.io:22888:23888;quickstart.confluent.io:32888:33888;quickstart.confluent.io:42888:43888
+      ZOOKEEPER_SERVERS: kafka-sasl:22888:23888;kafka-sasl:32888:33888;kafka-sasl:42888:43888
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zookeeper_3_jaas.conf
         -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
         -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
         -Dsun.security.krb5.debug=true
+    # ports:
+    #   - '42181:42181'
     volumes:
     - ${KAFKA_SASL_SECRETS_DIR}:/etc/kafka/secrets
     network_mode: host
@@ -78,18 +83,20 @@ services:
 
   kafka-sasl-1:
     image: confluentinc/cp-kafka:latest
+#    ports:
+#      - '19094:19094'
     network_mode: host
     # This is required because Kafka can fail if kerberos is still initializing.
     restart: on-failure:3
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
-      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://quickstart.confluent.io:19094
-      KAFKA_SSL_KEYSTORE_FILENAME: kafka.broker1.keystore.jks
-      KAFKA_SSL_KEYSTORE_CREDENTIALS: broker1_keystore_creds
-      KAFKA_SSL_KEY_CREDENTIALS: broker1_sslkey_creds
-      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.broker1.truststore.jks
-      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: broker1_truststore_creds
+      KAFKA_ZOOKEEPER_CONNECT: kafka-sasl-1:22181,kafka-sasl-2:32181,kafka-sasl-3:42181
+      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://kafka-sasl-1:19094
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka.kafka-sasl-1.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka-sasl-1_keystore_creds
+      KAFKA_SSL_KEY_CREDENTIALS: kafka-sasl-1_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.kafka-sasl-1.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka-sasl-1_truststore_creds
       KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_SSL
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
       KAFKA_SASL_ENABLED_MECHANISMS: GSSAPI
@@ -105,17 +112,19 @@ services:
 
   kafka-sasl-2:
     image: confluentinc/cp-kafka:latest
+#    ports:
+#      - '29094:29094'
     network_mode: host
     restart: on-failure:3
     environment:
       KAFKA_BROKER_ID: 2
-      KAFKA_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
-      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://quickstart.confluent.io:29094
-      KAFKA_SSL_KEYSTORE_FILENAME: kafka.broker2.keystore.jks
-      KAFKA_SSL_KEYSTORE_CREDENTIALS: broker2_keystore_creds
-      KAFKA_SSL_KEY_CREDENTIALS: broker2_sslkey_creds
-      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.broker2.truststore.jks
-      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: broker2_truststore_creds
+      KAFKA_ZOOKEEPER_CONNECT: kafka-sasl.local:22181,kafka-sasl.local:32181,kafka-sasl.local:42181
+      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://kafka-sasl.local:29094
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka.kafka-sasl-2.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka-sasl-2_keystore_creds
+      KAFKA_SSL_KEY_CREDENTIALS: kafka-sasl-2_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.kafka-sasl-2.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka-sasl-2_truststore_creds
       KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_SSL
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
       KAFKA_SASL_ENABLED_MECHANISMS: GSSAPI
@@ -131,17 +140,19 @@ services:
 
   kafka-sasl-3:
     image: confluentinc/cp-kafka:latest
+#    ports:
+#      - '39094:39094'
     network_mode: host
     restart: on-failure:3
     environment:
       KAFKA_BROKER_ID: 3
-      KAFKA_ZOOKEEPER_CONNECT: quickstart.confluent.io:22181,quickstart.confluent.io:32181,quickstart.confluent.io:42181
-      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://quickstart.confluent.io:39094
-      KAFKA_SSL_KEYSTORE_FILENAME: kafka.broker3.keystore.jks
-      KAFKA_SSL_KEYSTORE_CREDENTIALS: broker3_keystore_creds
-      KAFKA_SSL_KEY_CREDENTIALS: broker3_sslkey_creds
-      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.broker3.truststore.jks
-      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: broker3_truststore_creds
+      KAFKA_ZOOKEEPER_CONNECT: kafka-sasl.local:22181,kafka-sasl.local:32181,kafka-sasl.local:42181
+      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://kafka-sasl.local:39094
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka.kafka-sasl-3.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka-sasl-3_keystore_creds
+      KAFKA_SSL_KEY_CREDENTIALS: kafka-sasl-3_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.kafka-sasl-3.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka-sasl-3_truststore_creds
       KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_SSL
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
       KAFKA_SASL_ENABLED_MECHANISMS: GSSAPI
