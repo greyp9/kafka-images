@@ -17,7 +17,7 @@ openssl x509 -req -CA ssl/snakeoil-ca-1.crt -CAkey ssl/snakeoil-ca-1.key -in ssl
 
 
 # kafka-sasl-1 kafka-sasl-2 kafka-sasl-3
-for i in kafka-sasl producer consumer
+for i in kafka-sasl-lo producer consumer
 do
 	echo $i
 	# Create keystores
