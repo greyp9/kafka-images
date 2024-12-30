@@ -1,27 +1,30 @@
 ---
+networks:
+  eden:
+    external: true
 services:
   zookeeper-sasl-1:
     image: confluentinc/cp-zookeeper:latest
     # This is required because Zookeeper can fail if kerberos is still initializing.
     restart: on-failure:3
+    container_name: zk-sasl-1
+    networks:
+      - eden
     environment:
       ZOOKEEPER_SERVER_ID: 1
       ZOOKEEPER_CLIENT_PORT: 22181
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_INIT_LIMIT: 5
       ZOOKEEPER_SYNC_LIMIT: 2
-      ZOOKEEPER_SERVERS: kafka-sasl-lo:22888:23888;kafka-sasl-lo:32888:33888;kafka-sasl-lo:42888:43888
+      ZOOKEEPER_SERVERS: zk-sasl-1:22888:23888;zk-sasl-2:32888:33888;zk-sasl-3:42888:43888
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zookeeper_1_jaas.conf
-        -Djava.security.krb5.conf=/etc/kafka/secrets/krb.external.conf
+        -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
         -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
         -Dsun.security.krb5.debug=true
     volumes:
     - ${KAFKA_SASL_SECRETS_DIR}:/etc/kafka/secrets
-#    ports:
-#      - '22181:22181'
-#      - '22888:22888'
-#      - '23888:23888'
-    network_mode: host
+    # ports:
+    #  - '22181:22181'
     extra_hosts:
       - "moby:127.0.0.1"
 
@@ -29,23 +32,24 @@ services:
     image: confluentinc/cp-zookeeper:latest
     # This is required because Zookeeper can fail if kerberos is still initializing.
     restart: on-failure:3
+    container_name: zk-sasl-2
+    networks:
+      - eden
     environment:
       ZOOKEEPER_SERVER_ID: 2
       ZOOKEEPER_CLIENT_PORT: 32181
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_INIT_LIMIT: 5
       ZOOKEEPER_SYNC_LIMIT: 2
-      ZOOKEEPER_SERVERS: kafka-sasl-lo:22888:23888;kafka-sasl-lo:32888:33888;kafka-sasl-lo:42888:43888
+      ZOOKEEPER_SERVERS: zk-sasl-1:22888:23888;zk-sasl-2:32888:33888;zk-sasl-3:42888:43888
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zookeeper_2_jaas.conf
-        -Djava.security.krb5.conf=/etc/kafka/secrets/krb.external.conf
+        -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
         -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
         -Dsun.security.krb5.debug=true
     volumes:
     - ${KAFKA_SASL_SECRETS_DIR}:/etc/kafka/secrets
-    network_mode: host
-#    ports:
-#      - '32181:32181'
-#      - '33888:33888'
+    # ports:
+    #   - '32181:32181'
     extra_hosts:
       - "moby:127.0.0.1"
 
@@ -53,23 +57,24 @@ services:
     image: confluentinc/cp-zookeeper:latest
     # This is required because Zookeeper can fail if kerberos is still initializing.
     restart: on-failure:3
+    container_name: zk-sasl-3
+    networks:
+      - eden
     environment:
       ZOOKEEPER_SERVER_ID: 3
       ZOOKEEPER_CLIENT_PORT: 42181
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_INIT_LIMIT: 5
       ZOOKEEPER_SYNC_LIMIT: 2
-      ZOOKEEPER_SERVERS: kafka-sasl-lo:22888:23888;kafka-sasl-lo:32888:33888;kafka-sasl-lo:42888:43888
+      ZOOKEEPER_SERVERS: zk-sasl-1:22888:23888;zk-sasl-2:32888:33888;zk-sasl-3:42888:43888
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zookeeper_3_jaas.conf
-        -Djava.security.krb5.conf=/etc/kafka/secrets/krb.external.conf
+        -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
         -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
         -Dsun.security.krb5.debug=true
     volumes:
     - ${KAFKA_SASL_SECRETS_DIR}:/etc/kafka/secrets
-    network_mode: host
-#    ports:
-#      - '42181:42181'
-#      - '43888:43888'
+    # ports:
+    #   - '42181:42181'
     extra_hosts:
       - "moby:127.0.0.1"
 
@@ -86,20 +91,22 @@ services:
 
   kafka-sasl-1:
     image: confluentinc/cp-kafka:latest
-    network_mode: host
-#    ports:
-#      - '19094:19094'
+    container_name: kafka-sasl-1
+    networks:
+      - eden
+    ports:
+      - '19094:19094'
     # This is required because Kafka can fail if kerberos is still initializing.
     restart: on-failure:3
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: kafka-sasl-lo:22181,kafka-sasl-lo:32181,kafka-sasl-lo:42181
-      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://kafka-sasl-lo:19094
-      KAFKA_SSL_KEYSTORE_FILENAME: ssl/kafka.kafka-sasl-lo.keystore.jks
-      KAFKA_SSL_KEYSTORE_CREDENTIALS: ssl/kafka-sasl-lo_keystore_creds
-      KAFKA_SSL_KEY_CREDENTIALS: ssl/kafka-sasl-lo_sslkey_creds
-      KAFKA_SSL_TRUSTSTORE_FILENAME: ssl/kafka.kafka-sasl-lo.truststore.jks
-      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: ssl/kafka-sasl-lo_truststore_creds
+      KAFKA_ZOOKEEPER_CONNECT: zk-sasl-1:22181,zk-sasl-2:32181,zk-sasl-3:42181
+      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://kafka-sasl-1.eden:19094
+      KAFKA_SSL_KEYSTORE_FILENAME: ssl/kafka.kafka-sasl-1.eden.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: ssl/kafka-sasl-1.eden_keystore_creds
+      KAFKA_SSL_KEY_CREDENTIALS: ssl/kafka-sasl-1.eden_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: ssl/kafka.kafka-sasl-1.eden.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: ssl/kafka-sasl-1.eden_truststore_creds
       KAFKA_SSL_CLIENT_AUTH: required
       KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_SSL
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
@@ -108,7 +115,7 @@ services:
       KAFKA_LOG4J_ROOT_LOGLEVEL: DEBUG
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker1_jaas.conf
         -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
-        -Dsun.security.krb5.debug=true
+        -Dsun.security.krb5.debug=false
     volumes:
       - ${KAFKA_SASL_SECRETS_DIR}:/etc/kafka/secrets
     extra_hosts:
@@ -116,19 +123,21 @@ services:
 
   kafka-sasl-2:
     image: confluentinc/cp-kafka:latest
-    network_mode: host
-#    ports:
-#      - '29094:29094'
+    container_name: kafka-sasl-2
+    networks:
+      - eden
+    ports:
+      - '29094:29094'
     restart: on-failure:3
     environment:
       KAFKA_BROKER_ID: 2
-      KAFKA_ZOOKEEPER_CONNECT: kafka-sasl-lo:22181,kafka-sasl-lo:32181,kafka-sasl-lo:42181
-      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://kafka-sasl-lo:29094
-      KAFKA_SSL_KEYSTORE_FILENAME: ssl/kafka.kafka-sasl-lo.keystore.jks
-      KAFKA_SSL_KEYSTORE_CREDENTIALS: ssl/kafka-sasl-lo_keystore_creds
-      KAFKA_SSL_KEY_CREDENTIALS: ssl/kafka-sasl-lo_sslkey_creds
-      KAFKA_SSL_TRUSTSTORE_FILENAME: ssl/kafka.kafka-sasl-lo.truststore.jks
-      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: ssl/kafka-sasl-lo_truststore_creds
+      KAFKA_ZOOKEEPER_CONNECT: zk-sasl-1:22181,zk-sasl-2:32181,zk-sasl-3:42181
+      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://kafka-sasl-2.eden:29094
+      KAFKA_SSL_KEYSTORE_FILENAME: ssl/kafka.kafka-sasl-2.eden.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: ssl/kafka-sasl-2.eden_keystore_creds
+      KAFKA_SSL_KEY_CREDENTIALS: ssl/kafka-sasl-2.eden_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: ssl/kafka.kafka-sasl-2.eden.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: ssl/kafka-sasl-2.eden_truststore_creds
       KAFKA_SSL_CLIENT_AUTH: required
       KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_SSL
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
@@ -137,7 +146,7 @@ services:
       KAFKA_LOG4J_ROOT_LOGLEVEL: DEBUG
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker2_jaas.conf
         -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
-        -Dsun.security.krb5.debug=true
+        -Dsun.security.krb5.debug=false
     volumes:
       - ${KAFKA_SASL_SECRETS_DIR}:/etc/kafka/secrets
     extra_hosts:
@@ -145,19 +154,21 @@ services:
 
   kafka-sasl-3:
     image: confluentinc/cp-kafka:latest
-    network_mode: host
-#    ports:
-#      - '39094:39094'
+    container_name: kafka-sasl-3
+    networks:
+      - eden
+    ports:
+      - '39094:39094'
     restart: on-failure:3
     environment:
       KAFKA_BROKER_ID: 3
-      KAFKA_ZOOKEEPER_CONNECT: kafka-sasl-lo:22181,kafka-sasl-lo:32181,kafka-sasl-lo:42181
-      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://kafka-sasl-lo:39094
-      KAFKA_SSL_KEYSTORE_FILENAME: ssl/kafka.kafka-sasl-lo.keystore.jks
-      KAFKA_SSL_KEYSTORE_CREDENTIALS: ssl/kafka-sasl-lo_keystore_creds
-      KAFKA_SSL_KEY_CREDENTIALS: ssl/kafka-sasl-lo_sslkey_creds
-      KAFKA_SSL_TRUSTSTORE_FILENAME: ssl/kafka.kafka-sasl-lo.truststore.jks
-      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: ssl/kafka-sasl-lo_truststore_creds
+      KAFKA_ZOOKEEPER_CONNECT: zk-sasl-1:22181,zk-sasl-2:32181,zk-sasl-3:42181
+      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://kafka-sasl-3.eden:39094
+      KAFKA_SSL_KEYSTORE_FILENAME: ssl/kafka.kafka-sasl-3.eden.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: ssl/kafka-sasl-3.eden_keystore_creds
+      KAFKA_SSL_KEY_CREDENTIALS: ssl/kafka-sasl-3.eden_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: ssl/kafka.kafka-sasl-3.eden.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: ssl/kafka-sasl-3.eden_truststore_creds
       KAFKA_SSL_CLIENT_AUTH: required
       KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_SSL
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
@@ -166,7 +177,7 @@ services:
       KAFKA_LOG4J_ROOT_LOGLEVEL: DEBUG
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker3_jaas.conf
         -Djava.security.krb5.conf=/etc/kafka/secrets/krb.conf
-        -Dsun.security.krb5.debug=true
+        -Dsun.security.krb5.debug=false
     volumes:
       - ${KAFKA_SASL_SECRETS_DIR}:/etc/kafka/secrets
     extra_hosts:
